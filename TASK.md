@@ -63,3 +63,33 @@ const LOCATIONS = [
 
 ## DONE when
 All success criteria met. Then HANDOFF for Phase 2.
+
+---
+
+## Token Refresh Process
+
+The GHL API requires a token that expires every ~1 hour. To refresh:
+
+### Automatic (via Shelley)
+1. Gmail OAuth token refresh is automatic (uses refresh_token)
+2. GHL token requires browser automation:
+   - Navigate to https://app.jointheapex.com/
+   - Login with credentials from ~/ghl-automation/.env
+   - Complete OTP (code arrives via email, fetch from Gmail API)
+   - Extract `m_a` cookie from browser
+   - Save to ~/ghl-automation/config/ghl-client-token.json
+
+### Files
+- Gmail tokens: ~/ghl-automation/config/gmail-tokens.json
+- GHL token: ~/ghl-automation/config/ghl-client-token.json
+- Credentials: ~/ghl-automation/.env (GHL_EMAIL, GHL_PASSWORD)
+
+### Quick Gmail Token Refresh
+```bash
+source ~/ghl-automation/.env
+curl -s -X POST https://oauth2.googleapis.com/token \
+  -d "client_id=$GOOGLE_CLIENT_ID" \
+  -d "client_secret=$GOOGLE_CLIENT_SECRET" \
+  -d "refresh_token=$(jq -r '.refresh_token' ~/ghl-automation/config/gmail-tokens.json)" \
+  -d "grant_type=refresh_token"
+```
