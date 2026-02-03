@@ -57,15 +57,16 @@ test.describe('Phase 1 - Foundation', () => {
     const select = page.locator('header select');
     await expect(select).toBeVisible();
     
-    // Check locations are present (options exist but may not be "visible" until dropdown opens)
+    // Check all 5 locations are present as options
     await expect(select.locator('option')).toHaveCount(5);
     
-    // Check by selecting each value
-    await select.selectOption('gDtFIBrCnempxaF6emIs'); // Phonesites
-    await expect(select).toHaveValue('gDtFIBrCnempxaF6emIs');
-    
-    await select.selectOption('OG4bIh7relMcYLo9Izfi'); // Apex Business  
-    await expect(select).toHaveValue('OG4bIh7relMcYLo9Izfi');
+    // Verify specific location names exist
+    const options = await select.locator('option').allTextContents();
+    expect(options).toContain('Phonesites');
+    expect(options).toContain('Apex Business');
+    expect(options).toContain('Closer Capital');
+    expect(options).toContain('MedSpa Millions');
+    expect(options).toContain('SignedSeal');
   });
 
   test('mobile sidebar toggle works', async ({ page, context }) => {
