@@ -95,3 +95,19 @@ export async function getStats(locationId: string) {
     opportunities: opportunities.total ?? opportunities.opportunities?.length ?? 0,
   };
 }
+
+export interface TokenStatus {
+  valid: boolean;
+  remaining: number;
+  expiresAt: string;
+}
+
+export async function getTokenStatus(): Promise<TokenStatus> {
+  const res = await api<{ token: TokenStatus }>('/api/status');
+  return res.token;
+}
+
+export async function refreshToken(): Promise<{ status: string; message: string }> {
+  const res = await fetch(`${API_BASE}/api/token/refresh-async`, { method: 'POST' });
+  return res.json();
+}
