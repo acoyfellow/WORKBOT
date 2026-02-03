@@ -2,7 +2,7 @@ import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
 const AUTH_COOKIE = 'workbot_auth';
-const AUTH_PASSWORD = 'workbot2026';
+const AUTH_PASSWORD = process.env.WORKBOT_PASSWORD || 'changeme';
 
 export const load: PageServerLoad = async ({ cookies }) => {
   // Already authenticated, redirect to home
