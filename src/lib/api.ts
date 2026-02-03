@@ -62,15 +62,18 @@ export async function getContacts(locationId: string, query = '', limit = 20) {
 
 export async function getConversations(locationId: string, limit = 20) {
   const params = new URLSearchParams({ locationId, limit: String(limit) });
-  return api<{ conversations: Conversation[] }>(`/api/conversations?${params}`);
+  const result = await api<{ data?: { conversations: Conversation[] }; conversations?: Conversation[] }>(`/api/conversations?${params}`);
+  return { conversations: result.data?.conversations || result.conversations || [] };
 }
 
 export async function getPipelines(locationId: string) {
-  return api<{ pipelines: Pipeline[] }>(`/api/pipelines?locationId=${locationId}`);
+  const result = await api<{ data?: { pipelines: Pipeline[] }; pipelines?: Pipeline[] }>(`/api/pipelines?locationId=${locationId}`);
+  return { pipelines: result.data?.pipelines || result.pipelines || [] };
 }
 
 export async function getWorkflows(locationId: string) {
-  return api<{ workflows: Workflow[] }>(`/api/workflows?locationId=${locationId}`);
+  const result = await api<{ data?: { workflows: Workflow[] }; workflows?: Workflow[] }>(`/api/workflows?locationId=${locationId}`);
+  return { workflows: result.data?.workflows || result.workflows || [] };
 }
 
 export async function getActivities(locationId: string, options?: {
@@ -84,7 +87,8 @@ export async function getActivities(locationId: string, options?: {
   if (options?.startDate) params.set('startDate', options.startDate);
   if (options?.endDate) params.set('endDate', options.endDate);
   if (options?.limit) params.set('limit', String(options.limit));
-  return api<{ activities: Activity[]; stats?: Record<string, number> }>(`/api/activities?${params}`);
+  const result = await api<{ data?: { activities: Activity[] }; activities?: Activity[]; stats?: Record<string, number> }>(`/api/activities?${params}`);
+  return { activities: result.data?.activities || result.activities || [], stats: result.stats };
 }
 
 export async function getStats(locationId: string) {

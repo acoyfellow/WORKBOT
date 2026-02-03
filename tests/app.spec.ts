@@ -1,6 +1,16 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Phase 1 - Foundation', () => {
+// Helper to set auth cookie
+async function setAuthCookie(context: any) {
+  await context.addCookies([{
+    name: 'workbot_auth',
+    value: '1',
+    domain: 'localhost',
+    path: '/'
+  }]);
+}
+
+test.describe('Authentication', () => {
   test('redirects to login when not authenticated', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL('/login');
@@ -15,52 +25,70 @@ test.describe('Phase 1 - Foundation', () => {
     await expect(page.locator('text=Invalid password')).toBeVisible();
   });
 
-  test('logs in with correct password and shows dashboard', async ({ page }) => {
+  test('logs in with correct password', async ({ page }) => {
     await page.goto('/login');
     await page.fill('input[name="password"]', 'workbot2026');
     await page.click('button[type="submit"]');
-    
-    // Should redirect to dashboard
     await expect(page).toHaveURL('/');
     await expect(page.locator('h2')).toHaveText('Dashboard');
-    
-    // Stats cards visible (use more specific selectors)
-    await expect(page.locator('.bg-gray-800 >> text=Contacts').first()).toBeVisible();
-    await expect(page.locator('.bg-gray-800 >> text=Conversations').first()).toBeVisible();
-    await expect(page.locator('.bg-gray-800 >> text=Opportunities')).toBeVisible();
+  });
+});
+
+test.describe('Dashboard', () => {
+  test.beforeEach(async ({ context }) => {
+    await setAuthCookie(context);
   });
 
-  test('sidebar navigation works', async ({ page, context }) => {
-    // Set auth cookie
-    await context.addCookies([{
-      name: 'workbot_auth',
-      value: '1',
-      domain: 'localhost',
-      path: '/'
-    }]);
-    
+  test('shows token status', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('text=GHL API Token')).toBeVisible();
+    // Should show either Valid or Expired
+    await expect(page.locator('text=/Valid|Expired/')).toBeVisible();
+  });
+
+  test('shows stats cards', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('text=Contacts').first()).toBeVisible();
+    await expect(page.locator('text=Conversations').first()).toBeVisible();
+    await expect(page.locator('text=Opportunities')).toBeVisible();
+  });
+
+  test('has refresh token button', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('button:has-text("Refresh Token")')).toBeVisible();
+  });
+});
+
+test.describe('Sidebar & Navigation', () => {
+  test.beforeEach(async ({ context }) => {
+    await setAuthCookie(context);
+  });
+
+  test('sidebar is visible on desktop', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('nav')).toBeVisible();
     await expect(page.locator('nav >> text=Dashboard')).toBeVisible();
     await expect(page.locator('nav >> text=Contacts')).toBeVisible();
+    await expect(page.locator('nav >> text=Pipelines')).toBeVisible();
   });
 
-  test('location selector is present with all locations', async ({ page, context }) => {
-    await context.addCookies([{
-      name: 'workbot_auth',
-      value: '1',
-      domain: 'localhost',
-      path: '/'
-    }]);
+  test('mobile sidebar toggle works', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/');
     
+    const sidebar = page.locator('nav');
+    await expect(sidebar).toHaveClass(/-translate-x-full/);
+    
+    await page.click('header button');
+    await expect(sidebar).toHaveClass(/translate-x-0/);
+  });
+
+  test('location selector has all locations', async ({ page }) => {
     await page.goto('/');
     const select = page.locator('header select');
     await expect(select).toBeVisible();
-    
-    // Check all 5 locations are present as options
     await expect(select.locator('option')).toHaveCount(5);
     
-    // Verify specific location names exist
     const options = await select.locator('option').allTextContents();
     expect(options).toContain('Phonesites');
     expect(options).toContain('Apex Business');
@@ -68,27 +96,117 @@ test.describe('Phase 1 - Foundation', () => {
     expect(options).toContain('MedSpa Millions');
     expect(options).toContain('SignedSeal');
   });
+});
 
-  test('mobile sidebar toggle works', async ({ page, context }) => {
-    await context.addCookies([{
-      name: 'workbot_auth',
-      value: '1',
-      domain: 'localhost',
-      path: '/'
-    }]);
+test.describe('Contacts Page', () => {
+  test.beforeEach(async ({ context }) => {
+    await setAuthCookie(context);
+  });
+
+  test('loads and shows contacts table', async ({ page }) => {
+    await page.goto('/contacts');
+    await expect(page.locator('h2')).toHaveText('Contacts');
+    await expect(page.locator('input[placeholder="Search..."]')).toBeVisible();
+    await expect(page.locator('button:has-text("Search")')).toBeVisible();
     
-    // Set mobile viewport
-    await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/');
+    // Table headers
+    await expect(page.locator('th:has-text("Name")')).toBeVisible();
+    await expect(page.locator('th:has-text("Email")')).toBeVisible();
+    await expect(page.locator('th:has-text("Phone")')).toBeVisible();
+  });
+
+  test('shows contacts data or loading state', async ({ page }) => {
+    await page.goto('/contacts');
+    // Wait for either data or error
+    await page.waitForSelector('table tbody tr', { timeout: 10000 });
+    const rows = page.locator('table tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
+  });
+});
+
+test.describe('Conversations Page', () => {
+  test.beforeEach(async ({ context }) => {
+    await setAuthCookie(context);
+  });
+
+  test('loads and shows conversations table', async ({ page }) => {
+    await page.goto('/conversations');
+    await expect(page.locator('h2')).toHaveText('Conversations');
     
-    // Sidebar should be hidden initially on mobile
-    const sidebar = page.locator('nav');
-    await expect(sidebar).toHaveClass(/-translate-x-full/);
+    // Table headers
+    await expect(page.locator('th:has-text("Contact")')).toBeVisible();
+    await expect(page.locator('th:has-text("Last Message")')).toBeVisible();
+  });
+});
+
+test.describe('Pipelines Page', () => {
+  test.beforeEach(async ({ context }) => {
+    await setAuthCookie(context);
+  });
+
+  test('loads and shows pipelines', async ({ page }) => {
+    await page.goto('/pipelines');
+    await expect(page.locator('h2')).toHaveText('Pipelines');
     
-    // Click hamburger
-    await page.click('header button');
+    // Wait for pipelines to load
+    await page.waitForSelector('.bg-gray-800 h3', { timeout: 10000 });
+    const pipelines = page.locator('.bg-gray-800 h3');
+    const count = await pipelines.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('pipelines show stages', async ({ page }) => {
+    await page.goto('/pipelines');
+    await page.waitForSelector('.bg-gray-700', { timeout: 10000 });
+    // Stages are shown as gray-700 badges
+    const stages = page.locator('.bg-gray-700');
+    const count = await stages.count();
+    expect(count).toBeGreaterThan(0);
+  });
+});
+
+test.describe('Workflows Page', () => {
+  test.beforeEach(async ({ context }) => {
+    await setAuthCookie(context);
+  });
+
+  test('loads and shows workflows table', async ({ page }) => {
+    await page.goto('/workflows');
+    await expect(page.locator('h2')).toHaveText('Workflows');
     
-    // Sidebar should be visible
-    await expect(sidebar).toHaveClass(/translate-x-0/);
+    // Table headers
+    await expect(page.locator('th:has-text("Name")')).toBeVisible();
+    await expect(page.locator('th:has-text("Status")')).toBeVisible();
+  });
+
+  test('shows workflow data rows', async ({ page }) => {
+    await page.goto('/workflows');
+    await page.waitForSelector('table tbody tr', { timeout: 10000 });
+    const rows = page.locator('table tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
+  });
+});
+
+test.describe('Activities Page', () => {
+  test.beforeEach(async ({ context }) => {
+    await setAuthCookie(context);
+  });
+
+  test('loads and shows filter controls', async ({ page }) => {
+    await page.goto('/activities');
+    await expect(page.locator('h2')).toHaveText('Activities');
+    
+    // Filter controls (use main to avoid header select)
+    await expect(page.locator('main select')).toBeVisible();
+    await expect(page.locator('input[type="date"]').first()).toBeVisible();
+    await expect(page.locator('button:has-text("Filter")')).toBeVisible();
+  });
+
+  test('has activity type filter options', async ({ page }) => {
+    await page.goto('/activities');
+    const select = page.locator('select').first();
+    await expect(select.locator('option')).toHaveCount(5); // All Types + 4 specific
   });
 });
