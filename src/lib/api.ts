@@ -53,7 +53,11 @@ export interface Activity {
 export async function getContacts(locationId: string, query = '', limit = 20) {
   const params = new URLSearchParams({ locationId, limit: String(limit) });
   if (query) params.set('query', query);
-  return api<{ contacts: Contact[]; total?: number }>(`/api/contacts?${params}`);
+  const result = await api<{ data?: { contacts: Contact[]; meta?: { total?: number } }; contacts?: Contact[] }>(`/api/contacts?${params}`);
+  // Handle both wrapped and unwrapped responses
+  const contacts = result.data?.contacts || result.contacts || [];
+  const total = result.data?.meta?.total;
+  return { contacts, total };
 }
 
 export async function getConversations(locationId: string, limit = 20) {
