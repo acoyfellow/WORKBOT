@@ -1,0 +1,7 @@
+node_modules/
+.svelte-kit/
+.alchemy/
+.env
+build/
+.DS_Store
+*.log
