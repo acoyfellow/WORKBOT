@@ -26,6 +26,7 @@
     { href: '/workflows', label: 'Workflows' },
     { href: '/activities', label: 'Activities' },
     { href: '/chat', label: 'Chat' },
+    { href: '/leaderboard', label: 'Leaderboard' },
   ];
 </script>
 
