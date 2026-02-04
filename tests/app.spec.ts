@@ -210,3 +210,30 @@ test.describe('Activities Page', () => {
     await expect(select.locator('option')).toHaveCount(5); // All Types + 4 specific
   });
 });
+
+test.describe('Chat Page', () => {
+  test.beforeEach(async ({ context }) => {
+    await setAuthCookie(context);
+  });
+
+  test('loads chat interface', async ({ page }) => {
+    await page.goto('/chat');
+    await expect(page.locator('h2')).toHaveText('GHL Assistant');
+    await expect(page.locator('input[placeholder*="GHL"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Send' })).toBeVisible();
+  });
+
+  test('shows welcome message', async ({ page }) => {
+    await page.goto('/chat');
+    // The emoji wave appears in the welcome message
+    await expect(page.locator('text=👋')).toBeVisible();
+  });
+
+  test('has input and send button', async ({ page }) => {
+    await page.goto('/chat');
+    const input = page.locator('input[type="text"]');
+    const sendBtn = page.getByRole('button', { name: 'Send' });
+    await expect(input).toBeVisible();
+    await expect(sendBtn).toBeVisible();
+  });
+});
