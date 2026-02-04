@@ -25,6 +25,7 @@
     { href: '/pipelines', label: 'Pipelines' },
     { href: '/workflows', label: 'Workflows' },
     { href: '/activities', label: 'Activities' },
+    { href: '/chat', label: 'Chat' },
   ];
 </script>
 
