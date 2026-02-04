@@ -40,12 +40,13 @@
   {@render children()}
 {:else}
   <!-- Header -->
-  <header class="fixed top-0 left-0 right-0 bg-gray-800 border-b border-gray-700 z-30 px-4 py-2 flex items-center gap-3 md:pl-72">
+  <header class="fixed top-0 right-0 left-0 md:left-64 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center gap-3 z-20">
     <button onclick={toggleSidebar} class="p-2 hover:bg-gray-700 rounded md:hidden">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
       </svg>
     </button>
+    <div class="flex-1"></div>
     <select 
       class="bg-gray-700 rounded px-3 py-1.5 text-sm font-medium"
       value={locationStore.selectedId}
@@ -67,7 +68,7 @@
   
   <!-- Sidebar -->
   <nav 
-    class="fixed top-0 md:top-12 left-0 w-64 bg-gray-800 h-screen md:h-[calc(100vh-3rem)] p-4 z-50 transition-transform duration-200 overflow-y-auto
+    class="fixed top-0 left-0 w-64 bg-gray-800 h-screen p-4 z-50 transition-transform duration-200 overflow-y-auto
            {sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0"
   >
     <div class="flex items-center justify-between mb-6">
@@ -96,7 +97,7 @@
   </nav>
   
   <!-- Main Content -->
-  <main class="md:ml-64 p-4 md:p-6 pt-16 min-h-screen bg-gray-900 text-gray-100">
+  <main class="md:ml-64 px-4 md:px-6 pt-16 pb-4 md:pb-6 min-h-screen bg-gray-900 text-gray-100">
     {@render children()}
   </main>
 {/if}
