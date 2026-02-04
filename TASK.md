@@ -1,95 +1,49 @@
-# Current Task: Phase 1 - Foundation
+# Current Task: Phase 2 - Leaderboard Accuracy & Polish
 
-## Goal
-Get the basic app running with:
-1. Simple password auth (hardcoded pw, cookie-based)
-2. Layout with responsive sidebar
-3. Location selector (stored in state)
-4. Dashboard page with placeholder stats
+## Completed (Phase 1)
+- ✅ Password auth (env var based)
+- ✅ Responsive sidebar layout
+- ✅ Location selector (5 GHL sub-accounts)
+- ✅ Dashboard with token status & refresh button
+- ✅ All data pages: Contacts, Conversations, Pipelines, Workflows, Activities
+- ✅ Chat interface (natural language → GHL API)
+- ✅ Leaderboard with Apps/Leads tracking
+- ✅ 21 Playwright e2e tests
+- ✅ GitHub repo: https://github.com/acoyfellow/WORKBOT
 
-## Password Gate Requirements
-- Single hardcoded password (e.g., "workbot2026")
-- On first visit, show login form
-- On correct password, set cookie `workbot_auth=1` (or signed value)
-- Check cookie in hooks.server.ts
-- If not authed, redirect to /login
+## In Progress
+- App submissions tracking system (on-demand sync)
+- Need to backfill historical data or set up regular sync
 
-## Reference Files
-- HTML prototype: ~/ghl-automation/public/index.html
-- Remote functions example: src/routes/data.remote.ts
+## Known Issues
+1. **App counts show 0** - No opportunities currently in "Personal App Submitted" stages. Need to either:
+   - Run sync when opps ARE in those stages
+   - Set up periodic sync (cron/alarm)
+   - Manually backfill from spreadsheet data
 
-## Files to Create/Modify
+2. **Some users show as "Unknown"** - User data not fully synced. Run user sync.
 
-### 1. src/routes/login/+page.svelte
-Simple login form with password input
+3. **GHL token expires hourly** - Manual refresh via browser login + OTP
 
-### 2. src/hooks.server.ts  
-Check auth cookie, redirect to /login if missing
+## Next Tasks
+1. Set up periodic sync for app submissions (every 15 min?)
+2. Add user sync to populate names
+3. Custom domain setup (workbot.coey.dev) - needs CF DNS token
+4. Consider webhook integration for real-time tracking
 
-### 3. src/routes/+layout.svelte
-- Responsive sidebar (hidden on mobile, toggle button)
-- Header with location selector
-- Main content area
-
-### 4. src/lib/stores/location.svelte.ts
-Svelte 5 rune-based store for selected location
-
-### 5. src/routes/+page.svelte
-Dashboard with stats cards (placeholder data for now)
-
-## Locations Data
-```typescript
-const LOCATIONS = [
-  { id: 'gDtFIBrCnempxaF6emIs', name: 'Phonesites' },
-  { id: 'OG4bIh7relMcYLo9Izfi', name: 'Apex Business' },
-  { id: 'U7eJ93D9PN7tH01uiIMl', name: 'Closer Capital' },
-  { id: 'OgoxaWFBx9k18Sker7XM', name: 'MedSpa Millions' },
-  { id: 'dkzsEb9htVMJzjuxLb51', name: 'SignedSeal' },
-];
+## App Submitted Stage IDs (Closer Capital)
+```
+Kevin's Pipeline: 036331fd-6772-4086-84ab-1303de7e4f8e
+Job Flow: c7fa45d8-a0e1-46b2-abc8-ee92448bc92d  
+Outside Sales Job Flow: 6b3a2a2c-6d33-44ae-a453-b461f5aa48da
 ```
 
-## Styling
-- Dark theme (bg-gray-900, text-gray-100)
-- Tailwind CSS (already included)
-- Match the look of the HTML prototype
+## Services
+- `workbot-dev` (systemd) - SvelteKit on port 8000
+- `ghl-dashboard` (systemd) - GHL API backend on port 8001
 
-## Success Criteria
-- `bun run dev` starts the app
-- Visiting / redirects to /login if not authed
-- Entering correct password sets cookie and shows dashboard
-- Sidebar works on mobile (hamburger toggle)
-- Location dropdown changes selected location
-- Dashboard shows placeholder stats cards
-
-## DONE when
-All success criteria met. Then HANDOFF for Phase 2.
-
----
-
-## Token Refresh Process
-
-The GHL API requires a token that expires every ~1 hour. To refresh:
-
-### Automatic (via Shelley)
-1. Gmail OAuth token refresh is automatic (uses refresh_token)
-2. GHL token requires browser automation:
-   - Navigate to https://app.jointheapex.com/
-   - Login with credentials from ~/ghl-automation/.env
-   - Complete OTP (code arrives via email, fetch from Gmail API)
-   - Extract `m_a` cookie from browser
-   - Save to ~/ghl-automation/config/ghl-client-token.json
-
-### Files
-- Gmail tokens: ~/ghl-automation/config/gmail-tokens.json
-- GHL token: ~/ghl-automation/config/ghl-client-token.json
-- Credentials: ~/ghl-automation/.env (GHL_EMAIL, GHL_PASSWORD)
-
-### Quick Gmail Token Refresh
-```bash
-source ~/ghl-automation/.env
-curl -s -X POST https://oauth2.googleapis.com/token \
-  -d "client_id=$GOOGLE_CLIENT_ID" \
-  -d "client_secret=$GOOGLE_CLIENT_SECRET" \
-  -d "refresh_token=$(jq -r '.refresh_token' ~/ghl-automation/config/gmail-tokens.json)" \
-  -d "grant_type=refresh_token"
-```
+## Key Files
+- `/home/exedev/workbot/` - SvelteKit app
+- `/home/exedev/ghl-automation/` - GHL API backend
+- `/home/exedev/ghl-automation/data/workbot.db` - SQLite database
+- `/home/exedev/ghl-automation/config/ghl-client-token.json` - GHL auth token
